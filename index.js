@@ -13,13 +13,27 @@ app.get('/', (req, res) => {
 
 // 2) Asıl PageSpeed endpoint
 app.get('/pagespeed', async (req, res) => {
-  const { url } = req.query;
+  const { url, strategy = 'desktop' } = req.query;
+
   if (!url) {
     return res.status(400).json({ error: 'URL parametresi gerekli' });
   }
+
+  // sadece mobile veya desktop kabul et, değilse hata dön
+  if (!['mobile', 'desktop'].includes(strategy)) {
+    return res.status(400).json({ error: "Geçersiz strategy parametresi. 'mobile' veya 'desktop' olmalı." });
+  }
+
   try {
     const result = await axios.get(
-      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=${process.env.API_KEY}`
+      'https://www.googleapis.com/pagespeedonline/v5/runPagespeed',
+      {
+        params: {
+          url: url,
+          strategy: strategy,
+          key: process.env.API_KEY
+        }
+      }
     );
     res.json(result.data);
   } catch (error) {
